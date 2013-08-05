@@ -81,6 +81,7 @@ class Scrum2bIssuesController < ApplicationController
     @list_versions_closed = @project.versions.where(:status => "closed")
     @member = @project.assignable_users
     @id_member = @member.collect{|id_member| id_member.id}
+    params[:select_version] ||= default_version    
     @id_version  = params[:select_version]
     @select_issues  = params[:select_member]
     @sprints = @project.versions.where(:status => "open")
@@ -255,12 +256,14 @@ class Scrum2bIssuesController < ApplicationController
 
 def default_version
     find_project unless @project
-    versions = @project.versions.where("status = 'open' AND effective_date > ?", Date.today).order("effective_date ASC").limit(1)
-    if versions.nil? or versions.empty?
+    #versions = @project.versions.where("status = 'open' AND effective_date > ?", Date.today.to_s(:db)).order("effective_date DESC").limit(1)
+    version = @project.versions.open.where("effective_date > ?", Date.today.to_s(:db)).last
+    if version.nil?
        0
     else
+      version.id
        # TODO should not have to do an extra sort here, but just order in the database. For some reason, the .order at the end of the above statement does not appear to be working:(
-       versions.sort{|x,y| x.effective_date <=> y.effective_date}.first.id
+       #versions.sort{|x,y| x.effective_date <=> y.effective_date}.first.id
     end
   end
   private
