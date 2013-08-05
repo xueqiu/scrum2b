@@ -40,5 +40,14 @@
   	<%= status.name %>
   	<br/>	
   <% end %>
+
+  <br/>
+  <%=content_tag(:label, "Trackers")%>
+  <% all_trackers = Tracker.all.sort %>
+  <% all_trackers.each do |tracker| %>
+    <%= check_box_tag "settings[trackers][#{tracker.id}]", tracker.name, @settings['trackers'] && @settings['trackers'].include?(tracker.id.to_s) %>
+    <%= tracker.name %>
+    <br/> 
+  <% end %>  
 </p>
 

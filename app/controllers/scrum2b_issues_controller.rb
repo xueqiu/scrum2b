@@ -8,6 +8,7 @@ class Scrum2bIssuesController < ApplicationController
   DEFAULT_STATUS_IDS = {}
   STATUS_IDS = {'status_no_start' => [], 'status_inprogress' => [], 
                        'status_completed' => [], 'status_closed' => []}
+  TRACKER_IDS = []
 
   SELECT_ISSUE_OPTIONS = {:all_working => 1,
                           :my => 2, 
@@ -96,9 +97,9 @@ class Scrum2bIssuesController < ApplicationController
       conditions[0] += " AND assigned_to_id = ?"
       conditions << @select_issues.to_i
     end
-    @new_issues = @project.issues.where(conditions).where("status_id IN (?)" , STATUS_IDS['status_no_start']).order(:s2b_position)
-    @started_issues = @project.issues.where(conditions).where("status_id IN (?)" , STATUS_IDS['status_inprogress']).order(:s2b_position)
-    @completed_issues = @project.issues.where(conditions).where("status_id IN (?)" , STATUS_IDS['status_completed']).order(:s2b_position)
+    @new_issues = @project.issues.where(conditions).where("status_id IN (?) and tracker_id in (?)" , STATUS_IDS['status_no_start'], TRACKER_IDS).order(:s2b_position)
+    @started_issues = @project.issues.where(conditions).where("status_id IN (?) and tracker_id in (?)" , STATUS_IDS['status_inprogress'], TRACKER_IDS).order(:s2b_position)
+    @completed_issues = @project.issues.where(conditions).where("status_id IN (?) and tracker_id in (?)" , STATUS_IDS['status_completed'], TRACKER_IDS).order(:s2b_position)
   end
 
   def update_status
@@ -286,9 +287,12 @@ def default_version
       else
         DEFAULT_STATUS_IDS[column_name] = STATUS_IDS[column_name].first
       end
-
     end
-     
+
+    @settings["trackers"].keys.each { |setting|
+      TRACKER_IDS.push(setting)
+    } if @settings["trackers"]
+
     if need_to_resetting
       flash[:notice] = "The system has not been setup to use Scrum2B Tool. Please contact to Administrator " + 
                        "or go to the Settings page of the plugin: <a href='/settings/plugin/scrum2b'>/settings/plugin/scrum2b</a> to config."
